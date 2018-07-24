@@ -36,6 +36,7 @@ Explanation: The input is: [5,1,4,null,null,3,6]. The root node's value
  * }
  */
 
+//hint: The inorder traversal of the binary search tree is ordered
 type TreeNode struct {
 	Val   int
 	Left  *TreeNode
