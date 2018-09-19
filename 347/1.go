@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strconv"
 )
 
 /*
@@ -26,27 +27,30 @@ type numFreq struct {
 	Freq int
 }
 
-func (nf *numFreq) Less(obj sortabelObj) sortabelObj {
-	if nf.Freq < obj.(*numFreq).Freq {
+func (nf *numFreq) Judge(obj sortabelObj) sortabelObj {
+	if nf.Freq > obj.(*numFreq).Freq {
 		return nf
 	}
 	return obj
 }
 
 func (nf *numFreq) Equal(obj sortabelObj) bool {
-	return true
+	return nf.Freq == obj.(*numFreq).Freq
+}
 
+func (nf *numFreq) String() string {
+	return strconv.Itoa(nf.Num) + ":" + strconv.Itoa(nf.Freq)
 }
 
 func topKFrequent(nums []int, k int) []int {
 
-	var freMap map[int]int
+	var freMap = make(map[int]int)
 
 	for _, v := range nums {
 		freMap[v]++
 	}
 
-	numFreqs := []*numFreq{}
+	numFreqs := []sortabelObj{}
 	for i, v := range freMap {
 		numFreqs = append(numFreqs, &numFreq{
 			Num:  i,
@@ -56,28 +60,19 @@ func topKFrequent(nums []int, k int) []int {
 
 	length := len(numFreqs)
 	initHeap(numFreqs)
-	for i := 0; i < k; {
-		nums[0], nums[length-1] = nums[length-1], nums[0]
+	fmt.Println(numFreqs)
+	for i := 0; i < k; i++ {
+		numFreqs[0], numFreqs[length-1] = numFreqs[length-1], numFreqs[0]
 		length = length - 1
-		shiftDown(nums, 0, length, targetIndexNum)
-		fmt.Println(nums)
-		if i > 0 && nums[length] == nums[length+1] {
-			continue
-		}
-		i++
+		shiftDown(numFreqs, 0, length, targetIndexNum)
+		fmt.Println(numFreqs)
 	}
 
 	ret := []int{}
-	index := len(nums) - 1
-	for i := 0; i < k; {
-		if i > 0 && ret[i-1] == nums[index] {
-
-		} else {
-			ret = append(ret, nums[index])
-			i++
-		}
+	index := len(numFreqs) - 1
+	for i := 0; i < k; i++ {
+		ret = append(ret, numFreqs[index].(*numFreq).Num)
 		index--
-
 	}
 	return ret
 }
@@ -95,8 +90,9 @@ func initHeap(nums []sortabelObj) {
 }
 
 type sortabelObj interface {
-	Less(obj sortabelObj) sortabelObj
+	Judge(obj sortabelObj) sortabelObj
 	Equal(obj sortabelObj) bool
+	String() string
 }
 
 func targetIndexNum(nums []sortabelObj, i, j int, length int) (int, sortabelObj) {
@@ -104,18 +100,11 @@ func targetIndexNum(nums []sortabelObj, i, j int, length int) (int, sortabelObj)
 		return i, nums[i]
 	}
 
-	if nums[i].Less(nums[j]).Equal(nums[i]) {
+	if nums[i].Judge(nums[j]).Equal(nums[i]) {
 		return i, nums[i]
 	}
 
 	return j, nums[j]
-}
-
-func max(i, j int) int {
-	if i > j {
-		return i
-	}
-	return j
 }
 
 type sortFunc func(nums []sortabelObj, i, j int, length int) (int, sortabelObj)
@@ -133,8 +122,7 @@ func shiftDown(nums []sortabelObj, i int, length int, sortF sortFunc) {
 		}
 		targetChildIndex, targetChildValue := sortF(nums, left, right, length)
 
-		//if nums[i] < targetChildValue {
-		if nums[i].Less(targetChildValue).Equal(targetChildValue) {
+		if nums[i].Judge(targetChildValue).Equal(targetChildValue) {
 			nums[i], nums[targetChildIndex] = nums[targetChildIndex], nums[i]
 			needShift = true
 			i = targetChildIndex
